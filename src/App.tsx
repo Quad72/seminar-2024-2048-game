@@ -6,6 +6,11 @@ import { useEffect, useState } from 'react';
 import Board from './Board';
 import { type Map2048, moveMapIn2048Rule } from './game.tsx';
 
+interface GameState {
+  board: Map2048;
+  score: number;
+}
+
 function App() {
   const createBoard = (rows: number, cols: number): Map2048 => {
     return Array.from({ length: rows }, () =>
@@ -16,6 +21,10 @@ function App() {
   const initializeBoard = (): Map2048 => {
     const board = createBoard(4, 4);
     return addRandomBlock(addRandomBlock(board));
+  };
+
+  const saveStateToHistory = (currentState: GameState) => {
+    setHistory((prevHistory) => [...prevHistory, currentState]);
   };
 
   const addRandomBlock = (board: Map2048): Map2048 => {
@@ -73,8 +82,17 @@ function App() {
     localStorage.setItem('bestScore', bestScore.toString());
   };
 
-  const handleUndo = (lastboard: Map2048) => {
-    setBoard(lastboard);
+  const handleUndo = () => {
+    if (history.length > 1) {
+      const newHistory = [...history];
+      newHistory.pop();
+      const previousState = newHistory[newHistory.length - 1];
+      if (previousState !== undefined) {
+        setBoard(previousState.board);
+        setScore(previousState.score);
+        setHistory(newHistory);
+      }
+    }
   };
 
   const checkGameWon = (board: Map2048): boolean => {
@@ -101,9 +119,6 @@ function App() {
   const [board, setBoard] = useState<Map2048>(
     loadGameStateFromLocalStorage().board,
   );
-  const [lastboard, setLastBoard] = useState<Map2048>(
-    loadGameStateFromLocalStorage().board,
-  );
   const [isOver, setIsOver] = useState<boolean>(false);
   const [isWon, setIsWon] = useState<boolean>(false);
   const [Score, setScore] = useState<number>(
@@ -112,6 +127,9 @@ function App() {
   const [bestScore, setBestScore] = useState<number>(
     loadGameStateFromLocalStorage().bestScore,
   );
+  const [history, setHistory] = useState<GameState[]>([
+    { board: initializeBoard(), score: 0 },
+  ]);
 
   useEffect(() => {
     saveGameStateToLocalStorage(board, Score, bestScore);
@@ -156,7 +174,6 @@ function App() {
       }
       if (moved) {
         const newboard = addRandomBlock(updatedBoard);
-        setLastBoard(board);
         setBoard(newboard);
         setScore((prevScore) => {
           const newScore = prevScore + moveScore;
@@ -169,6 +186,7 @@ function App() {
           return newScore;
         });
         saveGameStateToLocalStorage(newboard, Score, bestScore);
+        saveStateToHistory({ board: newboard, score: Score });
         if (checkGameWon(newboard)) {
           setIsWon(true);
         } else if (checkGameOver(newboard)) {
@@ -189,6 +207,7 @@ function App() {
     setIsOver(false);
     setIsWon(false);
     setScore(0);
+    setHistory([{ board: initializeBoard(), score: 0 }]);
     saveGameStateToLocalStorage(initializeBoard(), 0, bestScore);
   };
 
@@ -198,7 +217,7 @@ function App() {
       <div className="toolLine">
         <button
           onClick={() => {
-            handleUndo(lastboard);
+            handleUndo();
           }}
           className="undobutton"
         >
