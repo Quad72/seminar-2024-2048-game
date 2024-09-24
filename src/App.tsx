@@ -56,30 +56,37 @@ function App() {
     board: Map2048;
     score: number;
     bestScore: number;
+    history: GameState[];
   } => {
     const savedBoard = localStorage.getItem('2048-board');
     const savedScore = localStorage.getItem('Score');
     const savedBestScore = localStorage.getItem('bestScore');
+    const savedHistory = localStorage.getItem('gameHistory');
+    const newboard = initializeBoard();
 
     const board =
-      savedBoard !== null
-        ? (JSON.parse(savedBoard) as Map2048)
-        : initializeBoard();
+      savedBoard !== null ? (JSON.parse(savedBoard) as Map2048) : newboard;
     const score = savedScore !== null ? parseInt(savedScore, 10) : 0;
     const bestScore =
       savedBestScore !== null ? parseInt(savedBestScore, 10) : 0;
+    const history =
+      savedHistory !== null
+        ? (JSON.parse(savedHistory) as GameState[])
+        : [{ board: newboard, score: 0 }];
 
-    return { board, score, bestScore };
+    return { board, score, bestScore, history };
   };
 
   const saveGameStateToLocalStorage = (
     board: Map2048,
     score: number,
     bestScore: number,
+    history: GameState[],
   ) => {
     localStorage.setItem('2048-board', JSON.stringify(board));
     localStorage.setItem('Score', score.toString());
     localStorage.setItem('bestScore', bestScore.toString());
+    localStorage.setItem('gameHistory', JSON.stringify(history));
   };
 
   const handleUndo = () => {
@@ -127,13 +134,13 @@ function App() {
   const [bestScore, setBestScore] = useState<number>(
     loadGameStateFromLocalStorage().bestScore,
   );
-  const [history, setHistory] = useState<GameState[]>([
-    { board: initializeBoard(), score: 0 },
-  ]);
+  const [history, setHistory] = useState<GameState[]>(
+    loadGameStateFromLocalStorage().history,
+  );
 
   useEffect(() => {
-    saveGameStateToLocalStorage(board, Score, bestScore);
-  }, [board, Score, bestScore]);
+    saveGameStateToLocalStorage(board, Score, bestScore, history);
+  }, [board, Score, bestScore, history]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -185,8 +192,8 @@ function App() {
 
           return newScore;
         });
-        saveGameStateToLocalStorage(newboard, Score, bestScore);
         saveStateToHistory({ board: newboard, score: Score });
+        saveGameStateToLocalStorage(newboard, Score, bestScore, history);
         if (checkGameWon(newboard)) {
           setIsWon(true);
         } else if (checkGameOver(newboard)) {
@@ -200,15 +207,16 @@ function App() {
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [board, isOver, isWon, bestScore, Score]);
+  }, [board, isOver, isWon, bestScore, Score, history]);
 
   const restartGame = () => {
-    setBoard(initializeBoard());
+    const newboard = initializeBoard();
+    setBoard(newboard);
     setIsOver(false);
     setIsWon(false);
     setScore(0);
-    setHistory([{ board: initializeBoard(), score: 0 }]);
-    saveGameStateToLocalStorage(initializeBoard(), 0, bestScore);
+    setHistory([{ board: newboard, score: 0 }]);
+    saveGameStateToLocalStorage(newboard, 0, bestScore, history);
   };
 
   return (
