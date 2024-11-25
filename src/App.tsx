@@ -1,17 +1,21 @@
-import './App.css';
 import './game.tsx';
 
 import { useEffect, useState } from 'react';
 
 import Board from './Board';
-import { type Map2048, moveMapIn2048Rule } from './game.tsx';
+import styles from './css/App.module.css';
+import { moveMapIn2048Rule } from './game.tsx';
+import type { GameState } from './types/App.d.tsx';
+import type { Direction, Map2048 } from './types/game.d.tsx';
 
-interface GameState {
-  board: Map2048;
-  score: number;
-}
+const directionMap: { [key: string]: Direction } = {
+  ArrowUp: 'up',
+  ArrowDown: 'down',
+  ArrowLeft: 'left',
+  ArrowRight: 'right',
+};
 
-function App() {
+const App = () => {
   const createBoard = (rows: number, cols: number): Map2048 => {
     return Array.from({ length: rows }, () =>
       Array.from({ length: cols }, () => null),
@@ -28,7 +32,7 @@ function App() {
   };
 
   const addRandomBlock = (board: Map2048): Map2048 => {
-    const emptyCells: [number, number][] = [];
+    /*const emptyCells: [number, number][] = [];
 
     for (let i = 0; i < board.length; i++) {
       const row = board[i];
@@ -38,15 +42,24 @@ function App() {
           emptyCells.push([i, j]);
         }
       }
-    }
+    }*/
+
+    const emptyCells = board
+      .map((row, i) => {
+        return row
+          .map((cell, j) => (cell === null ? [i, j] : null))
+          .filter((cell) => cell !== null);
+      })
+      .flat();
 
     if (emptyCells.length === 0) return board;
 
     const randomIndex = Math.floor(Math.random() * emptyCells.length);
     const selectedCell = emptyCells[randomIndex];
-    if (selectedCell !== undefined) {
+    if (selectedCell !== undefined && selectedCell.length === 2) {
       const [i, j] = selectedCell;
-      if (board[i] === undefined) throw new Error('invalid map');
+      if (i === undefined || j === undefined || board[i] === undefined)
+        throw new Error('invalid cell');
       board[i][j] = Math.random() < 0.9 ? 2 : 4;
     }
     return board;
@@ -58,7 +71,7 @@ function App() {
     bestScore: number;
     history: GameState[];
   } => {
-    const savedBoard = localStorage.getItem('2048-board');
+    /*const savedBoard = localStorage.getItem('2048-board');
     const savedScore = localStorage.getItem('Score');
     const savedBestScore = localStorage.getItem('bestScore');
     const savedHistory = localStorage.getItem('gameHistory');
@@ -72,7 +85,24 @@ function App() {
     const history =
       savedHistory !== null
         ? (JSON.parse(savedHistory) as GameState[])
-        : [{ board: newboard, score: 0 }];
+        : [{ board: newboard, score: 0 }];*/
+    function parseWithDefault<T>(key: string, defaultValue: T): T {
+      const savedValue = localStorage.getItem(key);
+      if (savedValue === null) return defaultValue;
+      try {
+        return JSON.parse(savedValue) as T;
+      } catch {
+        return defaultValue;
+      }
+    }
+
+    const newboard = initializeBoard();
+    const board = parseWithDefault<Map2048>('2048-board', newboard);
+    const score = parseWithDefault<number>('Score', 0);
+    const bestScore = parseWithDefault<number>('bestScore', 0);
+    const history = parseWithDefault<GameState[]>('gameHistory', [
+      { board: newboard, score: 0 },
+    ]);
 
     return { board, score, bestScore, history };
   };
@@ -151,41 +181,21 @@ function App() {
       let moved = false;
       let moveScore = 0;
 
-      switch (event.key) {
-        case 'ArrowUp':
-          Movement = moveMapIn2048Rule(board, 'up');
-          updatedBoard = Movement.result;
-          moved = Movement.isMoved;
-          moveScore = Movement.moveScore;
-          break;
-        case 'ArrowDown':
-          Movement = moveMapIn2048Rule(board, 'down');
-          updatedBoard = Movement.result;
-          moved = Movement.isMoved;
-          moveScore = Movement.moveScore;
-          break;
-        case 'ArrowLeft':
-          Movement = moveMapIn2048Rule(board, 'left');
-          updatedBoard = Movement.result;
-          moved = Movement.isMoved;
-          moveScore = Movement.moveScore;
-          break;
-        case 'ArrowRight':
-          Movement = moveMapIn2048Rule(board, 'right');
-          updatedBoard = Movement.result;
-          moved = Movement.isMoved;
-          moveScore = Movement.moveScore;
-          break;
-        default:
-          return;
+      if (event.key in directionMap) {
+        const direction = directionMap[event.key];
+        if (direction === undefined) return;
+        Movement = moveMapIn2048Rule(board, direction);
+        updatedBoard = Movement.result;
+        moved = Movement.isMoved;
+        moveScore = Movement.moveScore;
       }
+
       if (moved) {
         const newboard = addRandomBlock(updatedBoard);
         setBoard(newboard);
         setScore((prevScore) => {
           const newScore = prevScore + moveScore;
 
-          // 베스트 스코어와 비교하여 업데이트
           if (newScore > bestScore) {
             setBestScore(newScore);
           }
@@ -220,32 +230,32 @@ function App() {
   };
 
   return (
-    <div className="app">
+    <div className={styles.main}>
       <h1>2048 Game</h1>
-      <div className="toolLine">
+      <div className={styles.toolLine}>
         <button
           onClick={() => {
             handleUndo();
           }}
-          className="undobutton"
+          className={styles.toolButton}
         >
           undo
         </button>
-        <button className="scorebutton">score: {Score}</button>
-        <button className="scorebutton">score: {bestScore}</button>
+        <button className={styles.toolButton}>score: {Score}</button>
+        <button className={styles.toolButton}>score: {bestScore}</button>
       </div>
       <Board BoardArray={board} />
       {isOver && !isWon && (
-        <div className="overlay">
-          <div className="game-over-message">
+        <div className={styles.overlay}>
+          <div className={styles.gameOverMessage}>
             <h2>Game Over</h2>
             <button onClick={restartGame}>Restart Game</button>
           </div>
         </div>
       )}
       {isWon && (
-        <div className="overlay">
-          <div className="game-over-message">
+        <div className={styles.overlay}>
+          <div className={styles.gameOverMessage}>
             <h2>You Win!</h2>
             <button onClick={restartGame}>Restart Game</button>
           </div>
@@ -253,6 +263,6 @@ function App() {
       )}
     </div>
   );
-}
+};
 
 export default App;

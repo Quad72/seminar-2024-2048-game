@@ -1,15 +1,13 @@
 import Cell from './Cell.tsx';
-import { type Cell as Celltype, type Map2048 } from './game.tsx';
-
-interface BoardProps {
-  BoardArray: Map2048;
-}
+import styles from './css/Board.module.css';
+import type { BoardProps } from './types/Board.d.tsx';
+import type { Cell as Celltype } from './types/game.d.tsx';
 
 const Board = ({ BoardArray }: BoardProps) => {
   return (
-    <div className="board">
+    <div className={styles.board}>
       {BoardArray.map((row: Celltype[], rowIndex: number) => (
-        <div className="row" key={rowIndex}>
+        <div className={styles.row} key={rowIndex}>
           {row.map((cellValue: Celltype, columnIndex: number) => (
             <Cell key={columnIndex} value={cellValue} />
           ))}

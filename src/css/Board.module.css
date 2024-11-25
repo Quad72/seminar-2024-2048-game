@@ -1,0 +1,15 @@
+.board {
+  display: grid;
+  gap: 10px;
+  justify-content: center;
+  align-items: center;
+  padding: 10px;
+  background-color: #bbada0;
+  border-radius: 5px;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: repeat(4, 80px);
+  gap: 10px;
+}

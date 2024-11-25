@@ -4,6 +4,14 @@
  * @param direction 이동 방향
  * @returns 이동 방향에 따른 결과와 이동되었는지 여부
  */
+import type {
+  Cell,
+  Direction,
+  DirectionDegreeMap,
+  Map2048,
+  MoveResult,
+} from './types/game.d.tsx';
+
 export const moveMapIn2048Rule = (
   map: Map2048,
   direction: Direction,
@@ -138,10 +146,3 @@ const revertDegreeMap: DirectionDegreeMap = {
   down: 90,
   left: 0,
 };
-
-export type Cell = number | null;
-export type Map2048 = Cell[][];
-type Direction = 'up' | 'left' | 'right' | 'down';
-type RotateDegree = 0 | 90 | 180 | 270;
-type DirectionDegreeMap = Record<Direction, RotateDegree>;
-type MoveResult = { result: Map2048; isMoved: boolean; moveScore: number };
