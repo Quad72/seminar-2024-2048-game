@@ -76,7 +76,7 @@ const rotateMapCounterClockwise = (
   }
 };
 
-const moveLeft = (map: Map2048): MoveResult => {
+export const moveLeft = (map: Map2048): MoveResult => {
   const movedRows = map.map(moveRowLeft);
   const result = movedRows.map((movedRow) => movedRow.result);
   const isMoved = movedRows.some((movedRow) => movedRow.isMoved);

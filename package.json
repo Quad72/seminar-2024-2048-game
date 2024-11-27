@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "test": "vitest",
     "types:check": "tsc",
     "format:check": "prettier --check .",
     "format:fix": "prettier --write .",
@@ -27,7 +28,8 @@
     "knip": "5.29.1",
     "prettier": "3.3.3",
     "typescript": "5.5.4",
-    "vite": "5.4.3"
+    "vite": "5.4.3",
+    "vitest": "^2.1.6"
   },
   "packageManager": "yarn@4.4.1"
 }
