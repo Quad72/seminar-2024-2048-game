@@ -44,4 +44,22 @@ describe('moveLeft', () => {
     const actual = moveLeft(map);
     expect(actual).toEqual(expected);
   });
+
+  it('when map is empty', () => {
+    const map: Map2048 = [
+      [null, null, null, null],
+      [null, null, null, null],
+      [null, null, null, null],
+      [null, null, null, null],
+    ];
+
+    const expected: MoveResult = {
+      result: map,
+      isMoved: false,
+      moveScore: 0,
+    };
+
+    const actual = moveLeft(map);
+    expect(actual).toEqual(expected);
+  });
 });
